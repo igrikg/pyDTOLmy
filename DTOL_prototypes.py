@@ -22,25 +22,24 @@ def errcheck_all(ret, func, args):
 def errcheck_none(ret, func, args):
     if ret:
         print("Error occured in"+ str(func))
-        print(ret)
         return
 
 # ----------- Initialize ---------------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_char_p, ctypes.POINTER(ctypes.c_ulong))
+prototype = ctypes.WINFUNCTYPE(ctypes.c_longlong, ctypes.c_char_p, ctypes.POINTER(ctypes.c_ulonglong))
 paramflags = (1, "name"), (2,'hDev')
 olDaInitialize = prototype(("olDaInitialize", dll), paramflags)
 olDaInitialize.errcheck = errcheck_all
 # -----------END Initialize ---------------------------------
 
 # ----------- olDaGetDASS ---------------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong, ctypes.c_long, ctypes.c_uint, ctypes.POINTER(ctypes.c_ulong))
+prototype = ctypes.WINFUNCTYPE(ctypes.c_longlong, ctypes.c_ulonglong, ctypes.c_long, ctypes.c_ulonglong, ctypes.POINTER(ctypes.c_ulong))
 paramflags = (1, "hDev"), (1,"SubsystemType"), (1,"uiElementNr"), (2,'adhandle')
 olDaGetDASS = prototype(("olDaGetDASS",dll), paramflags)
 olDaGetDASS.errcheck = errcheck_all
 # ----------- olDaGetDASS ---------------------------------
 
 # ----------- olDaSetDataFlow -----------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong, ctypes.c_uint)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_longlong, ctypes.c_ulonglong, ctypes.c_uint)
 paramflags = (1,"adhandle"),(1,"mode") # mode=OL_DF_SINGLEVALUE etc
 olDaSetDataFlow = prototype(("olDaSetDataFlow",dll),paramflags)
 olDaSetDataFlow.errcheck = errcheck_none

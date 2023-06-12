@@ -15,7 +15,7 @@ from DTOL_prototypes import *
 
 class DTOL:
     """ Data Translation DtOLWrapper Class """
-    def __init__(self, name=b'DT9836(00)'):
+    def __init__(self, name=b'DT9802(00)'):
         self.name = name
         self.data = []
         self.sshandle = []
@@ -29,24 +29,17 @@ class DTOL:
         self.val = 0
         
     def Initialize(self, name):
-        #print('Available Boards:')
-        #olDaEnumBoards(listboardscallback, 0)
-        #print('-----')
-        print('Initializing: ' + name)
         hdev = olDaInitialize(name)
-        #hdev = args
         self.hdev = hdev
         return hdev
     
     def GetSubsystem(self, subsystem_code, elemNum):
         sshandle = olDaGetDASS(self.hdev, subsystem_code, elemNum)
-        #print(args)
-        #sshandle = args[3]
         self.sshandle = sshandle
         return sshandle
     
     def SetDataFlow(self, flowvar):
-        #print(type(self.sshandle))
+        print(flowvar)
         olDaSetDataFlow(self.sshandle, flowvar)
         
     def GetDataFlow(self):
@@ -146,12 +139,12 @@ class DTOL:
     
     def setupGetSingleValue(self):
         self.Initialize(self.name)
-        self.GetSubsystem(OLSS_AD, ctypes.c_ulong(0))
+        self.GetSubsystem(OLSS_AD, ctypes.c_ulonglong(0))
         self.SetDataFlow(OL_DF_SINGLEVALUE)
-        self.olDaConfig()
-        self.getRange()
-        self.getEncoding()
-        self.getResolution()
+        #self.olDaConfig()
+        #self.getRange()
+        #self.getEncoding()
+        #self.getResolution()
 
     def setupSetSingleValue(self):
         self.Initialize(self.name)
@@ -286,11 +279,11 @@ class DTOL:
         return data
 
 if __name__ == "__main__":
-    print("Usage: io=DTOL('DT9836(01)')")
-    print("io.setupSingleValue()")
-    print("io.getSingleValue()")
+    print("Usage: io=DTOL('DT9802(00)')")
+    #print("io.setupSingleValue()")
+    #print("io.getSingleValue()")
     io = DTOL()
     io.setupGetSingleValue()
-    print(io.getSingleValue())
+    #print(io.getSingleValue())
         
     
