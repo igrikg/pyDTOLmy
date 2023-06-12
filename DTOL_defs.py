@@ -262,7 +262,10 @@ OL_SYNC_MODE_MASTER = 1
 OL_SYNC_MODE_SLAVE = 2
 
 #Buffer Codes
-WM_USER = 1024  #see http://msdn.microsoft.com/en-us/library/windows/desktop/ms644931(v=vs.85).aspx (#define WM_USER 0x0400) -> 1024 / http://svn.python.org/projects/ctypes/tags/native_pyobjects_from_fields/ctypes/samples/Windows/wtl/windows.py
+WM_USER = 1024
+#see http://msdn.microsoft.com/en-us/library/windows/desktop/ms644931(v=vs.85).aspx
+# (#define WM_USER 0x0400) -> 1024
+# / http://svn.python.org/projects/ctypes/tags/native_pyobjects_from_fields/ctypes/samples/Windows/wtl/windows.py
 OLDA_WM_TRIGGER_ERROR     = WM_USER+100
 OLDA_WM_UNDERRUN_ERROR    = WM_USER+101
 OLDA_WM_OVERRUN_ERROR     = WM_USER+102

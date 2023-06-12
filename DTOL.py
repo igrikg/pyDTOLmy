@@ -15,7 +15,8 @@ from DTOL_prototypes import *
 
 class DTOL:
     """ Data Translation DtOLWrapper Class """
-    def __init__(self, name=b'DT9802(00)'):
+    ####
+    def __init__(self, name='DT9802(00)'):
         self.name = name
         self.data = []
         self.sshandle = []
@@ -27,24 +28,26 @@ class DTOL:
         self.res = ctypes.c_uint(16)
         self.enc = ctypes.c_uint(OL_ENC_BINARY)
         self.val = 0
-        
+    ###
     def Initialize(self, name):
-        hdev = olDaInitialize(name)
+        hdev = olDaInitialize(name.encode())
         self.hdev = hdev
         return hdev
-    
+    ###
     def GetSubsystem(self, subsystem_code, elemNum):
+        print(self.hdev)
         sshandle = olDaGetDASS(self.hdev, subsystem_code, elemNum)
         self.sshandle = sshandle
         return sshandle
-    
+    ##
     def SetDataFlow(self, flowvar):
-        print(flowvar)
         olDaSetDataFlow(self.sshandle, flowvar)
-        
+    ####
     def GetDataFlow(self):
-        flow = olDaGetDataFlow(self.sshandle)
-        return flow
+        adr=ctypes.c_uint(0)
+        flowvar = ctypes.pointer(adr)
+        flow = olDaGetDataFlow(self.sshandle,flowvar)
+        return adr
 
     def setClockFrequency(self, freq):
         olDaSetClockFrequency(self.sshandle,freq)
@@ -52,10 +55,10 @@ class DTOL:
     def getClockFrequency(self):
         freq = olDaGetClockFrequency(self.sshandle)
         return freq
-    
+    ####
     def olDaConfig(self):
         olDaConfig(self.sshandle)
-    
+    ####
     def getRange(self):
         args=olDaGetRange(self.sshandle)
         #print(args)
@@ -64,31 +67,26 @@ class DTOL:
         self.rmax = rmax
         self.rmin = rmin
         return rmax, rmin
-    
+    ###
     def getEncoding(self):
         enc=olDaGetEncoding(self.sshandle)
         self.enc = enc
         return enc
-    
+    ###
     def getResolution(self):
         res = olDaGetResolution(self.sshandle)
         self.res = res
         return res
-    
+    ###
     def getSingleValue(self,channel=0, gain=ctypes.c_double(1)):
         val = olDaGetSingleValue(self.sshandle, ctypes.c_uint(channel), gain)
-        #val = args[1]
         val_voltage = self.CodeToVolts(val)
-        #self.val = val_voltage
         return val, val_voltage
 
     def setSingleValue(self,value,channel=0, gain=ctypes.c_double(1)):
         value_code = self.VoltsToCode(value)
         olDaPutSingleValue(self.sshandle, value_code, ctypes.c_uint(channel), gain)
-        #val = args[1]
-        #val_voltage = self.CodeToVolts(val)
-        #self.val = val_voltage
-        #return val
+
 
     def setWrapMode(self, mode):
         olDaSetWrapMode(self.sshandle, mode)
@@ -136,19 +134,19 @@ class DTOL:
 
     def stop(self):
         olDaStop(self.sshandle) 
-    
+    ###
     def setupGetSingleValue(self):
         self.Initialize(self.name)
         self.GetSubsystem(OLSS_AD, ctypes.c_ulonglong(0))
         self.SetDataFlow(OL_DF_SINGLEVALUE)
-        #self.olDaConfig()
-        #self.getRange()
-        #self.getEncoding()
-        #self.getResolution()
-
+        self.olDaConfig()
+        self.getRange()
+        self.getEncoding()
+        self.getResolution()
+    ###
     def setupSetSingleValue(self):
         self.Initialize(self.name)
-        self.GetSubsystem(OLSS_DA, ctypes.c_ulong(0))
+        self.GetSubsystem(OLSS_DA, ctypes.c_ulonglong(0))
         self.SetDataFlow(OL_DF_SINGLEVALUE)
         self.olDaConfig()
         self.getRange()
@@ -166,22 +164,24 @@ class DTOL:
         olDaEnumBoards(listboardscallback, 0)
         print('-----')
         self.Initialize(self.name)
-        self.GetSubsystem(OLSS_AD, ctypes.c_ulong(0))
+        self.GetSubsystem(OLSS_AD, ctypes.c_ulonglong(0))
         self.SetDataFlow(OL_DF_CONTINUOUS)
         #dma  = min (1, dma)            #/* try for one dma channel   */ 
         #freq = min (1000.0, freq)      #/* try for 1000hz throughput */
         dma = 1
         freq = 1000
         #self.setDMAUsage(1)
-        olDaSetNotificationProcedure(self.sshandle, notifycallback, self.sshandle) #notifycallback für plotting tests (siehe in DTOL_prototypes)
-        #self.olDaSetNotificationProcedure(self.sshandle,lpfnNotifyProc,lparam) #???, The procedure address lpfnNotifyProc can be set to null to disable notification. 
+        #olDaSetNotificationProcedure(self.sshandle, notifycallback, self.sshandle)
+        #notifycallback für plotting tests (siehe in DTOL_prototypes)
+        #self.olDaSetNotificationProcedure(self.sshandle,lpfnNotifyProc,lparam)
+        #???, The procedure address lpfnNotifyProc can be set to null to disable notification.
         self.setWrapMode(OL_WRP_NONE) #In continuous acquisition (including post-trigger, pre-trigger, and about-trigger), you can specify the wrap mode as none (allocated buffers are filled – or emptied for DACs – and operation stops), single (continuously reuses one buffer), or multiple (continuously uses multiple buffers).
         self.setClockFrequency(freq)
         self.setChannelListSize(1)
         self.setChannelListEntry(0,channel)
         #self.setGainListEntry(0,gain)
         self.olDaConfig()
-        size = freq/1    #/* 1 second buffer */
+        size = freq//1    #/* 1 second buffer */
         res = self.getResolution()
         self.getEncoding()
         self.getRange()
@@ -191,8 +191,8 @@ class DTOL:
             samplesize = 2 #e.g. 16 or 12 bits = 2 bytes
             
         for i in range(NUM_BUFFERS):
-            hBuffer = olDmCallocBuffer(0,0,size,samplesize);
-            olDaPutBuffer(self.sshandle, hBuffer);
+            hBuffer = olDmCallocBuffer(0,0,size,samplesize)
+            olDaPutBuffer(self.sshandle, hBuffer)
         
         self.start()
         sleep(30)
@@ -205,7 +205,7 @@ class DTOL:
             hbuffer = olDaGetBuffer(self.sshandle)
             #hbuffer = 0
             print(hbuffer)
-            if( hbuffer ):
+            if(hbuffer):
                 data_tmp = []
                 print(hbuffer)
                 #/* get max samples in input buffer */
@@ -283,7 +283,10 @@ if __name__ == "__main__":
     #print("io.setupSingleValue()")
     #print("io.getSingleValue()")
     io = DTOL()
+
+    data = io.setupAiLiveview()
+    print(len(data))
     io.setupGetSingleValue()
-    #print(io.getSingleValue())
-        
+    print(io.getSingleValue())
+
     

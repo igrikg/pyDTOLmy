@@ -4,25 +4,23 @@ Created on Fri May 16 11:05:53 2014
 
 @author: Jens Brauer
 """
+import struct
 import ctypes
 from ctypes.util import find_library
 
-dll = ctypes.CDLL(find_library('oldaapi64'))
-#print(dll)
-dll2 = ctypes.CDLL(find_library('OLMEM64'))
-#dll2 = ctypes.CDLL(find_library('OLMEMSUP'))
+is_32bit = struct.calcsize("P") == 4
+dll_file_name = 'oldaapi32' if is_32bit else 'oldaapi64'
+dll2_file_name = 'OLMEM32' if is_32bit else 'OLMEM64'
+dll = ctypes.CDLL(find_library(dll_file_name))
+dll2 = ctypes.CDLL(find_library(dll2_file_name))
+
 
 def errcheck_all(ret, func, args):
-    if ret:
-        print("Error occured in"+ str(func))
-        return
-    
+    if ret: raise "Error occured in"+ str(func)
     return args
 
 def errcheck_none(ret, func, args):
-    if ret:
-        print("Error occured in"+ str(func))
-        return
+    if ret: raise "Error occured in"+ str(func)
 
 # ----------- Initialize ---------------------------------
 prototype = ctypes.WINFUNCTYPE(ctypes.c_longlong, ctypes.c_char_p, ctypes.POINTER(ctypes.c_ulonglong))
@@ -32,7 +30,7 @@ olDaInitialize.errcheck = errcheck_all
 # -----------END Initialize ---------------------------------
 
 # ----------- olDaGetDASS ---------------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_longlong, ctypes.c_ulonglong, ctypes.c_long, ctypes.c_ulonglong, ctypes.POINTER(ctypes.c_ulong))
+prototype = ctypes.WINFUNCTYPE(ctypes.c_longlong, ctypes.c_ulonglong, ctypes.c_long, ctypes.c_ulonglong, ctypes.POINTER(ctypes.c_ulonglong))
 paramflags = (1, "hDev"), (1,"SubsystemType"), (1,"uiElementNr"), (2,'adhandle')
 olDaGetDASS = prototype(("olDaGetDASS",dll), paramflags)
 olDaGetDASS.errcheck = errcheck_all
@@ -46,56 +44,55 @@ olDaSetDataFlow.errcheck = errcheck_none
 # ----------- olDaSetDataFlow -----------------------------
 
 # ----------- olDaGetDataFlow -----------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong, ctypes.POINTER(ctypes.c_uint))
-paramflags = (1,'adhandle'),(2,'flowval')
+prototype = ctypes.WINFUNCTYPE(ctypes.c_uint, ctypes.c_ulonglong, ctypes.POINTER(ctypes.c_uint))
 olDaGetDataFlow = prototype(("olDaGetDataFlow",dll), paramflags)
 olDaGetDataFlow.errcheck = errcheck_all
 # ----------- olDaGetDataFlow -----------------------------
 
 # ----------- olDaConfig -----------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_longlong, ctypes.c_ulonglong)
 paramflags = (1,'adhandle'),
 olDaConfig = prototype(("olDaConfig",dll),paramflags)
 olDaConfig.errcheck = errcheck_none
 # ----------- olDaConfig -----------------------------
 
 #------------olDaGetRange -------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double))
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double))
 paramflags = (1,"ADDEV"),(2,"rmax"),(2,"rmin")
 olDaGetRange = prototype(("olDaGetRange",dll), paramflags)
 olDaGetRange.errcheck = errcheck_all
 #------------olDaGetRange -------------------------
 
 #------------olDaGetEncoding --------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong, ctypes.POINTER(ctypes.c_uint))
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong, ctypes.POINTER(ctypes.c_uint))
 paramflags = (1,"ADDEV"),(2,"res")
 olDaGetEncoding = prototype(("olDaGetEncoding",dll), paramflags)
 olDaGetEncoding.errcheck = errcheck_all
 #------------olDaGetEncoding --------------------------
 
 #------------ olDaGetResolution -----------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong, ctypes.POINTER(ctypes.c_uint))
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong, ctypes.POINTER(ctypes.c_uint))
 paramflags = (1,"ADDEV"),(2,"res")
 olDaGetResolution = prototype(("olDaGetResolution",dll), paramflags)
 olDaGetResolution.errcheck = errcheck_all
 #------------ olDaGetResolution -----------------------
 
 #------------ olDaGetSingleValue ----------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong, ctypes.POINTER(ctypes.c_long), ctypes.c_uint, ctypes.c_double)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong, ctypes.POINTER(ctypes.c_long), ctypes.c_uint, ctypes.c_double)
 paramflags = (1,"ADDEV"),(2,'Value'),(1,'Channel'),(1,'Gain')
 olDaGetSingleValue = prototype(("olDaGetSingleValue",dll), paramflags)
 olDaGetSingleValue.errcheck = errcheck_all
 #------------ olDaGetSingleValue ----------------------
 
 #------------ olDaPutSingleValue ----------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong, ctypes.c_long, ctypes.c_uint, ctypes.c_double)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong, ctypes.c_long, ctypes.c_uint, ctypes.c_double)
 paramflags = (1,"ADDEV"),(1,'Value'),(1,'Channel'),(1,'Gain')
 olDaPutSingleValue = prototype(("olDaPutSingleValue",dll), paramflags)
 olDaPutSingleValue.errcheck = errcheck_all
 #------------ olDaGetSingleValue ----------------------
 
 #------------olDaGetSingleFloat -------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong, ctypes.POINTER(ctypes.c_float), ctypes.c_uint, ctypes.c_double)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong, ctypes.POINTER(ctypes.c_float), ctypes.c_uint, ctypes.c_double)
 paaramflagst = (1,"ADDEV"),(2,'Value'),(1,'Channel'),(1,'Gain')
 olDaGetSingleFloat = prototype(("olDaGetSingleFloat",dll), paramflags)
 olDaGetSingleFloat.errcheck = errcheck_all
@@ -125,14 +122,14 @@ DWORD = ctypes.c_ulong
 LPHBUF = ctypes.POINTER(HBUF)
 
 #----------- olDaPutBuffer ----------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int,ctypes.c_ulong,HBUF)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int,ctypes.c_ulonglong,HBUF)
 paramflags =(1, "hDass"),(1, "hBuf")
 olDaPutBuffer = prototype(("olDaPutBuffer", dll), paramflags)
 olDaPutBuffer.errcheck = errcheck_none
 #----------- olDaPutBuffer ----------------------------
 
 #----------- olDaGetBuffer ----------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int,ctypes.c_ulong, PHBUF)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int,ctypes.c_ulonglong, PHBUF)
 paramflags =(1, "hDass"),(2, "phBuf")
 olDaGetBuffer = prototype(("olDaGetBuffer", dll), paramflags)
 olDaGetBuffer.errcheck = errcheck_all
@@ -181,7 +178,7 @@ olDmCopyFromBuffer.errcheck = errcheck_all
 #----------- olDmGetBufferECode  ----------------------------
 
 #----------- olDaFlushBuffers   -----------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong)
 paramflags =(1, "hDass"),
 olDaFlushBuffers = prototype(("olDaFlushBuffers", dll), paramflags)
 olDaFlushBuffers.errcheck = errcheck_none
@@ -205,96 +202,96 @@ olDaFlushBuffers.errcheck = errcheck_none
 #ECODE WINAPI olDmGetBufferECode (HBUF, LPECODE);
 
 #----------- olDaSetChannelListSize. ------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int,ctypes.c_ulong,ctypes.c_uint)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int,ctypes.c_ulonglong,ctypes.c_uint)
 paramflags =(1, "hDass"),(1, "uiSize")
 olDaSetChannelListSize = prototype(("olDaSetChannelListSize", dll), paramflags)
 olDaSetChannelListSize.errcheck = errcheck_none
 #----------- olDaSetChannelListSize. ------------------
 
 #----------- olDaGetChannelListSize. ------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong,PUINT)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong,PUINT)
 paramflags =(1, "hDass"),(2, "puiSize")
 olDaGetChannelListSize = prototype(("olDaGetChannelListSize", dll), paramflags)
 olDaGetChannelListSize.errcheck = errcheck_all
 #----------- olDaGetChannelListSize. ------------------
 
 #----------- olDaSetChannelListEntry ------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong,ctypes.c_uint,ctypes.c_uint)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong,ctypes.c_uint,ctypes.c_uint)
 paramflags =(1, "hDass"),(1, "uiEntry"),(1, "uiChan")
 olDaSetChannelListEntry = prototype(("olDaSetChannelListEntry", dll), paramflags)
 olDaSetChannelListEntry.errcheck = errcheck_none
 #----------- olDaSetChannelListEntry ------------------
 
 #----------- olDaGetChannelListEntry ------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong,ctypes.c_uint,PUINT)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong,ctypes.c_uint,PUINT)
 paramflags =(1, "hDass"),(1, "uiEntry"),(2, "puiChan")
 olDaGetChannelListEntry = prototype(("olDaGetChannelListEntry", dll), paramflags)
 olDaGetChannelListEntry.errcheck = errcheck_all
 #----------- olDaGetChannelListEntry ------------------
 
 #----------- olDaSetGainListEntry ---------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong,ctypes.c_uint,ctypes.c_double)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong,ctypes.c_uint,ctypes.c_double)
 paramflags =(1, "hDass"),(1, "uiEntry"),(1, "dGain")
 olDaSetGainListEntry = prototype(("olDaSetGainListEntry", dll), paramflags)
 olDaSetGainListEntry.errcheck = errcheck_none
 #----------- olDaSetGainListEntry ---------------------
 
 #----------- olDaGetGainListEntry ---------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong,ctypes.c_uint,ctypes.POINTER(ctypes.c_double))
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong,ctypes.c_uint,ctypes.POINTER(ctypes.c_double))
 paramflags =(1, "hDass"),(1, "uiEntry"),(2, "pdGain")
 olDaGetGainListEntry = prototype(("olDaGetGainListEntry", dll), paramflags)
 olDaGetGainListEntry.errcheck = errcheck_all
 #----------- olDaGetGainListEntry ---------------------
 
 #----------- olDaSetClockFrequency --------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong,ctypes.c_double)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong,ctypes.c_double)
 paramflags =(1, "hDass"),(1, "dfFreq")
 olDaSetClockFrequency = prototype(("olDaSetClockFrequency", dll), paramflags)
 olDaSetClockFrequency.errcheck = errcheck_none
 #----------- olDaSetClockFrequency --------------------
 
 #----------- olDaGetClockFrequency --------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong,ctypes.POINTER(ctypes.c_double))
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong,ctypes.POINTER(ctypes.c_double))
 paramflags =(1, "hDass"),(2, "pdfFreq")
 olDaGetClockFrequency = prototype(("olDaGetClockFrequency", dll), paramflags)
 olDaGetClockFrequency.errcheck = errcheck_none
 #----------- olDaGetClockFrequency --------------------
 
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong,ctypes.c_uint)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong,ctypes.c_uint)
 paramflags =(1, "hDass"),(1, "uiWrapMode")
 olDaSetWrapMode = prototype(("olDaSetWrapMode", dll), paramflags)
 olDaSetWrapMode.errcheck = errcheck_none
 
 #----------- olDaStart -------------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong)
 paramflags =(1, "hDass"),
 olDaStart = prototype(("olDaStart", dll), paramflags)
 olDaStart.errcheck = errcheck_none
 #----------- olDaStart -------------------------------
 
 #----------- olDaStop. -------------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong)
 paramflags =(1, "hDass"),
 olDaStop = prototype(("olDaStop", dll), paramflags)
 olDaStop.errcheck = errcheck_none
 #----------- olDaStop. -------------------------------
 
 #----------- olDaReleaseDASS -------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong)
 paramflags =(1, "hDass"),
 olDaReleaseDASS = prototype(("olDaReleaseDASS", dll), paramflags)
 olDaReleaseDASS.errcheck = errcheck_none
 #----------- olDaReleaseDASS -------------------------
 
 #----------- olDaTerminate   -------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong)
 paramflags =(1, "hDev"),
 olDaTerminate  = prototype(("olDaTerminate", dll), paramflags)
 olDaTerminate.errcheck = errcheck_none
 #----------- olDaTerminate   -------------------------
 
 #----------- olDaGetSSCaps   -------------------------
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong,ctypes.c_int,ctypes.POINTER(ctypes.c_uint))
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong,ctypes.c_int,ctypes.POINTER(ctypes.c_uint))
 paramflags =(1, "hDass"),(1, "OlSSc"),(2, "puiCap")
 olDaGetSSCaps = prototype(("olDaGetSSCaps", dll), paramflags)
 olDaGetSSCaps.errcheck = errcheck_all
@@ -306,14 +303,14 @@ olDaGetSSCaps.errcheck = errcheck_all
 #olDmGetBufferPtr
 
 # Notify Callback for olDaSetNotificationProcedure 
-prototypeNotify = ctypes.WINFUNCTYPE(None, ctypes.c_uint, ctypes.c_ulong, ctypes.c_long)
+prototypeNotify = ctypes.WINFUNCTYPE(None, ctypes.c_uint, ctypes.c_ulonglong, ctypes.c_long)
 def NotifyProc(uiMsg, wParam, lParam):
 	print(uiMsg)
 	print(wParam)
 	print(lParam)
 notifycallback = prototypeNotify(NotifyProc)
 
-prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulong, prototypeNotify, ctypes.c_long)
+prototype = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong, prototypeNotify, ctypes.c_longlong)
 paramflags =(1, "hDass"),(1,'pointer2fcn'),(1,'lparam')
 olDaSetNotificationProcedure = prototype(('olDaSetNotificationProcedure',dll), paramflags)
 olDaSetNotificationProcedure.errcheck = errcheck_none
@@ -351,7 +348,7 @@ olDaEnumBoards.errcheck = errcheck_none
 
 
 # Notify Callback for olDaSetNotificationProcedure - new as a test for cintinious readout
-prototypeNotifytest = ctypes.WINFUNCTYPE(None, ctypes.c_uint, ctypes.c_ulong, ctypes.c_long)
+prototypeNotifytest = ctypes.WINFUNCTYPE(None, ctypes.c_uint, ctypes.c_ulonglong, ctypes.c_long)
 def NotifyProctest(uiMsg, wParam, lParam):
     print(uiMsg)
     if uiMsg == 1127:
