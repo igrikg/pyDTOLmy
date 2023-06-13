@@ -98,7 +98,7 @@ class DTOL:
         olDaSetChannelListEntry(self.sshandle, entry, channel)
 
     def setGainListEntry(self, entry, gain):
-        olDaSetGainListEntry(self,sshandle, entry, gain)
+        olDaSetGainListEntry(self.sshandle, entry, gain)
     
     def CodeToVolts(self, val, rmin=None,rmax=None, gain=None, res=None, enc=None):
         if rmin is None:
@@ -135,7 +135,7 @@ class DTOL:
     def stop(self):
         olDaStop(self.sshandle) 
     ###
-    def setupGetSingleValue(self):
+    def setupAISingleValue(self):
         self.Initialize(self.name)
         self.GetSubsystem(OLSS_AD, ctypes.c_ulonglong(0))
         self.SetDataFlow(OL_DF_SINGLEVALUE)
@@ -144,7 +144,7 @@ class DTOL:
         self.getEncoding()
         self.getResolution()
     ###
-    def setupSetSingleValue(self):
+    def setupAOSingleValue(self):
         self.Initialize(self.name)
         self.GetSubsystem(OLSS_DA, ctypes.c_ulonglong(0))
         self.SetDataFlow(OL_DF_SINGLEVALUE)
@@ -157,7 +157,7 @@ class DTOL:
         olDaReleaseDASS(self.sshandle)
         olDaTerminate(self.hdev)
 
-    def setupAiLiveview(self):
+    def __setupAiLiveview(self):
         NUM_BUFFERS = 10
         channel = 0
         print('Available Boards:')
@@ -199,71 +199,33 @@ class DTOL:
         data = []
         ret = olDaGetSSCaps(self.sshandle,OLSSC_SUP_CONTINUOUS)
         print('OLSSC_SUP_CONTINUOUS')
-        print(ret)
         for i in range(NUM_BUFFERS):
             print('i= ' + str(i))
             hbuffer = olDaGetBuffer(self.sshandle)
-            #hbuffer = 0
-            print(hbuffer)
             if(hbuffer):
                 data_tmp = []
                 print(hbuffer)
                 #/* get max samples in input buffer */
                 samples = olDmGetValidSamples( hbuffer )
-                print(samples)
-
                 #/* get pointer to the buffer */
                 if (res > 16): #type=PDWORD (ulong)
-                    print(res)
                     buftmp = olDmGetBufferPtr( hbuffer)
-                    print(buftmp)
                     sleep(0.01)
                     #/* get last sample in buffer */
                     value = buftmp[samples-1]
                     print('Last Val:')
                     print(value)
-                    print(buftmp)
                 else: #type=PWORD (ushort=Ganze 16-Bit-Zahl ohne Vorzeichen)
-                    print(res)
                     buftmp = olDmGetBufferPtr( hbuffer)  #type int with adress
-                    print(buftmp)
                     sleep(0.01)
-                    print(type(buftmp))
-                    #test = olDmCopyFromBuffer(hbuffer,samples)
-                    #print(test)
-                    #test = ctypes.c_double(42)
-                    #testptr = ctypes.pointer(test)
-                    #print(testptr)
-                    #print(testptr[0])
                     P = ctypes.POINTER(ctypes.c_ushort)
-                    #p = P.from_address(buftmp)
                     p=ctypes.cast(buftmp,P)
-                    print(ctypes.addressof(p))
-                    print(p)
-                    print(p[0])
                     val = self.CodeToVolts(p[0])
-                    print(val)
-                    print(self.rmin)
-                    print(self.enc)
-                    print(OL_ENC_BINARY)
-                    print((self.rmax-self.rmin)/2**res*p[0]+self.rmin)
-                    print(p[1])
                     val = self.CodeToVolts(p[1])
                     print(val)
-                    print(p.contents)
-
-                    #/* get last sample in buffer */
-                    #value = p[samples-1]
-                    #print(value)
-                    print(p[samples-1])
                     data.append(p[0:samples-1])
-                    #data.append(data_tmp)
-                    #print(data)
                 #/* put buffer back to ready list */
                 olDaPutBuffer(self.sshandle, hbuffer)
-
-        # Delete Buffers
-        #sleep(5)
         print('Freeing of buffers...')
         olDaFlushBuffers(self.sshandle)
         for i in range(NUM_BUFFERS):
@@ -280,13 +242,9 @@ class DTOL:
 
 if __name__ == "__main__":
     print("Usage: io=DTOL('DT9802(00)')")
-    #print("io.setupSingleValue()")
-    #print("io.getSingleValue()")
     io = DTOL()
-
-    data = io.setupAiLiveview()
-    print(len(data))
-    io.setupGetSingleValue()
-    print(io.getSingleValue())
+    io.setupAISingleValue()
+    for i in range(8):
+        print(io.getSingleValue(i))
 
     

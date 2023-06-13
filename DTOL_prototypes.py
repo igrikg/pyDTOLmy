@@ -16,11 +16,11 @@ dll2 = ctypes.CDLL(find_library(dll2_file_name))
 
 
 def errcheck_all(ret, func, args):
-    if ret: raise "Error occured in"+ str(func)
+    if ret: raise Exception(f"Error #{ret} occurred in{func}")
     return args
 
 def errcheck_none(ret, func, args):
-    if ret: raise "Error occured in"+ str(func)
+    if ret: raise Exception(f"Error #{ret} occurred in{func}")
 
 # ----------- Initialize ---------------------------------
 prototype = ctypes.WINFUNCTYPE(ctypes.c_longlong, ctypes.c_char_p, ctypes.POINTER(ctypes.c_ulonglong))
